@@ -9,8 +9,8 @@
 # setup fresh SD card with image above - login per SSH and run this script:
 ##########################################################################
 
-defaultRepo="rootzoll"
-defaultBranch="v1.9"
+defaultRepo="ziggie1984"
+defaultBranch="signet-without-hdd"
 
 defaultAPIuser="fusion44"
 defaultAPIrepo="blitz_api"
@@ -24,7 +24,7 @@ nocolor="\033[0m"
 red="\033[31m"
 
 ## usage as a function to be called whenever there is a huge mistake on the options
-usage(){
+usage() {
   printf %s"${me} [--option <argument>]
 
 Options:
@@ -64,22 +64,25 @@ if [ "$1" = "-EXPORT" ] || [ "$1" = "EXPORT" ]; then
 fi
 
 ## default user message
-error_msg(){ printf %s"${red}${me}: ${1}${nocolor}\n"; exit 1; }
+error_msg() {
+  printf %s"${red}${me}: ${1}${nocolor}\n"
+  exit 1
+}
 
 ## assign_value variable_name "${opt}"
 ## it strips the dashes and assign the clean value to the variable
 ## assign_value status --on IS status=on
 ## variable_name is the name you want it to have
 ## $opt being options with single or double dashes that don't require arguments
-assign_value(){
+assign_value() {
   case "${2}" in
-    --*) value="${2#--}";;
-    -*) value="${2#-}";;
-    *) value="${2}"
+  --*) value="${2#--}" ;;
+  -*) value="${2#-}" ;;
+  *) value="${2}" ;;
   esac
   case "${value}" in
-    0) value="false";;
-    1) value="true";;
+  0) value="false" ;;
+  1) value="true" ;;
   esac
   ## Escaping quotes is needed because else if will fail if the argument is quoted
   # shellcheck disable=SC2140
@@ -92,9 +95,9 @@ assign_value(){
 ## $opt being options with single or double dashes
 ## $arg is requiring and argument, else it fails
 ## assign_value "${1}" "${3}" means it is assining the argument ($3) to the variable_name ($1)
-get_arg(){
+get_arg() {
   case "${3}" in
-    ""|-*) error_msg "Option '${2}' requires an argument.";;
+  "" | -*) error_msg "Option '${2}' requires an argument." ;;
   esac
   assign_value "${1}" "${3}"
 }
@@ -109,27 +112,39 @@ get_arg(){
 ## 3. if the option does not start with dash and does not require argument, assign to command manually.
 while :; do
   case "${1}" in
-    -*=*) opt="${1%=*}"; arg="${1#*=}"; shift_n=1;;
-    -*) opt="${1}"; arg="${2}"; shift_n=2;;
-    *) opt="${1}"; arg="${2}"; shift_n=1;;
+  -*=*)
+    opt="${1%=*}"
+    arg="${1#*=}"
+    shift_n=1
+    ;;
+  -*)
+    opt="${1}"
+    arg="${2}"
+    shift_n=2
+    ;;
+  *)
+    opt="${1}"
+    arg="${2}"
+    shift_n=1
+    ;;
   esac
   case "${opt}" in
-    -i|-i=*|--interaction|--interaction=*) get_arg interaction "${opt}" "${arg}";;
-    -f|-f=*|--fatpack|--fatpack=*) get_arg fatpack "${opt}" "${arg}";;
-    -u|-u=*|--github-user|--github-user=*) get_arg github_user "${opt}" "${arg}";;
-    -b|-b=*|--branch|--branch=*) get_arg branch "${opt}" "${arg}";;
-    -d|-d=*|--display|--display=*) get_arg display "${opt}" "${arg}";;
-    -t|-t=*|--tweak-boot-drive|--tweak-boot-drive=*) get_arg tweak_boot_drive "${opt}" "${arg}";;
-    -w|-w=*|--wifi-region|--wifi-region=*) get_arg wifi_region "${opt}" "${arg}";;
-    "") break;;
-    *) error_msg "Invalid option: ${opt}";;
+  -i | -i=* | --interaction | --interaction=*) get_arg interaction "${opt}" "${arg}" ;;
+  -f | -f=* | --fatpack | --fatpack=*) get_arg fatpack "${opt}" "${arg}" ;;
+  -u | -u=* | --github-user | --github-user=*) get_arg github_user "${opt}" "${arg}" ;;
+  -b | -b=* | --branch | --branch=*) get_arg branch "${opt}" "${arg}" ;;
+  -d | -d=* | --display | --display=*) get_arg display "${opt}" "${arg}" ;;
+  -t | -t=* | --tweak-boot-drive | --tweak-boot-drive=*) get_arg tweak_boot_drive "${opt}" "${arg}" ;;
+  -w | -w=* | --wifi-region | --wifi-region=*) get_arg wifi_region "${opt}" "${arg}" ;;
+  "") break ;;
+  *) error_msg "Invalid option: ${opt}" ;;
   esac
   shift "${shift_n}"
 done
 
 ## if there is a limited option, check if the value of variable is within this range
 ## $ range_argument variable_name possible_value_1 possible_value_2
-range_argument(){
+range_argument() {
   name="${1}"
   eval var='$'"${1}"
   shift
@@ -142,13 +157,13 @@ range_argument(){
   fi
 }
 
-apt_install(){
-    sudo apt install -y ${@}
-    if [ $? -eq 100 ]; then
-        echo "FAIL! apt failed to install needed packages!"
-        echo ${@}
-        exit 1
-    fi
+apt_install() {
+  sudo apt install -y ${@}
+  if [ $? -eq 100 ]; then
+    echo "FAIL! apt failed to install needed packages!"
+    echo ${@}
+    exit 1
+  fi
 }
 
 general_utils="curl"
@@ -232,8 +247,11 @@ done
 cpu="$(uname -m)" && echo "cpu=${cpu}"
 architecture="$(dpkg --print-architecture 2>/dev/null)" && echo "architecture=${architecture}"
 case "${cpu}" in
-  arm*|aarch64|x86_64|amd64);;
-  *) echo -e "# FAIL #\nCan only build on ARM, aarch64, x86_64 not on: cpu=${cpu}"; exit 1;;
+arm* | aarch64 | x86_64 | amd64) ;;
+*)
+  echo -e "# FAIL #\nCan only build on ARM, aarch64, x86_64 not on: cpu=${cpu}"
+  exit 1
+  ;;
 esac
 
 # AUTO-DETECTION: OPERATINGSYSTEM
@@ -280,7 +298,7 @@ sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.ta
 # https://github.com/rootzoll/raspiblitz/issues/138
 # https://daker.me/2014/10/how-to-fix-perl-warning-setting-locale-failed-in-raspbian.html
 # https://stackoverflow.com/questions/38188762/generate-all-locales-in-a-docker-image
-if [ "${baseimage}" = "raspios_arm64" ]||[ "${baseimage}" = "debian_rpi64" ]||[ "${baseimage}" = "armbian" ]; then
+if [ "${baseimage}" = "raspios_arm64" ] || [ "${baseimage}" = "debian_rpi64" ] || [ "${baseimage}" = "armbian" ]; then
   echo -e "\n*** FIXING LOCALES FOR BUILD ***"
 
   sudo sed -i "s/^# en_US.UTF-8 UTF-8.*/en_US.UTF-8 UTF-8/g" /etc/locale.gen
@@ -371,7 +389,7 @@ sudo -H python3 -m pip install pytesseract mechanize PySocks urwid Pillow reques
 echo -e "\n*** PREPARE ${baseimage} ***"
 
 # make sure the pi user is present
-if [ "$(compgen -u | grep -c pi)" -eq 0 ];then
+if [ "$(compgen -u | grep -c pi)" -eq 0 ]; then
   echo "# Adding the user pi"
   sudo adduser --disabled-password --gecos "" pi
   sudo adduser pi sudo
@@ -436,7 +454,7 @@ if [ "${baseimage}" = "raspios_arm64" ] || [ "${baseimage}" = "debian_rpi64" ]; 
 fi
 
 # special prepare when Nvidia Jetson Nano
-if [ $(uname -a | grep -c 'tegra') -gt 0 ] ; then
+if [ $(uname -a | grep -c 'tegra') -gt 0 ]; then
   echo "Nvidia --> disable GUI on boot"
   sudo systemctl set-default multi-user.target
 fi
@@ -449,8 +467,8 @@ echo "root:raspiblitz" | sudo chpasswd
 echo "pi:raspiblitz" | sudo chpasswd
 
 # prepare auto-start of 00infoLCD.sh script on pi user login (just kicks in if auto-login of pi is activated in HDMI or LCD mode)
-if [ "${baseimage}" = "raspios_arm64" ] || [ "${baseimage}" = "debian_rpi64" ] || \
-   [ "${baseimage}" = "armbian" ] || [ "${baseimage}" = "ubuntu" ]; then
+if [ "${baseimage}" = "raspios_arm64" ] || [ "${baseimage}" = "debian_rpi64" ] ||
+  [ "${baseimage}" = "armbian" ] || [ "${baseimage}" = "ubuntu" ]; then
   homeFile=/home/pi/.bashrc
   autostartDone=$(grep -c "automatic start the LCD" $homeFile)
   if [ ${autostartDone} -eq 0 ]; then
@@ -623,7 +641,10 @@ file="/home/admin/config.scripts/lndlibs/lightning_pb2_grpc.py"
 sudo bash -c "echo 'PATH=\$PATH:/sbin' >> /etc/profile"
 
 # replace boot splash image when raspbian
-[ "${baseimage}" = "raspios_arm64" ] && { echo "* replacing boot splash"; sudo cp /home/admin/raspiblitz/pictures/splash.png /usr/share/plymouth/themes/pix/splash.png; }
+[ "${baseimage}" = "raspios_arm64" ] && {
+  echo "* replacing boot splash"
+  sudo cp /home/admin/raspiblitz/pictures/splash.png /usr/share/plymouth/themes/pix/splash.png
+}
 
 echo -e "\n*** RASPIBLITZ EXTRAS ***"
 
@@ -638,13 +659,13 @@ sudo bash -c "echo 'NG_CLI_ANALYTICS=ci' >> /home/admin/.bashrc"
 
 # raspiblitz custom command prompt #2400
 if ! grep -Eq "^[[:space:]]*PS1.*₿" /home/admin/.bashrc; then
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i # raspiblitz custom command prompt https://github.com/rootzoll/raspiblitz/issues/2400' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i raspiIp=$(hostname -I | cut -d " " -f1)' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i if [ "$color_prompt" = yes ]; then' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i \    PS1=\x27${debian_chroot:+($debian_chroot)}\\[\\033[00;33m\\]\\u@$raspiIp:\\[\\033[00;34m\\]\\w\\[\\033[01;35m\\]$(__git_ps1 "(%s)") \\[\\033[01;33m\\]₿\\[\\033[00m\\] \x27' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i else' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i \    PS1=\x27${debian_chroot:+($debian_chroot)}\\u@$raspiIp:\\w₿ \x27' /home/admin/.bashrc
-    sudo sed -i '/^unset color_prompt force_color_prompt$/i fi' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i # raspiblitz custom command prompt https://github.com/rootzoll/raspiblitz/issues/2400' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i raspiIp=$(hostname -I | cut -d " " -f1)' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i if [ "$color_prompt" = yes ]; then' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i \    PS1=\x27${debian_chroot:+($debian_chroot)}\\[\\033[00;33m\\]\\u@$raspiIp:\\[\\033[00;34m\\]\\w\\[\\033[01;35m\\]$(__git_ps1 "(%s)") \\[\\033[01;33m\\]₿\\[\\033[00m\\] \x27' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i else' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i \    PS1=\x27${debian_chroot:+($debian_chroot)}\\u@$raspiIp:\\w₿ \x27' /home/admin/.bashrc
+  sudo sed -i '/^unset color_prompt force_color_prompt$/i fi' /home/admin/.bashrc
 fi
 
 echo -e "\n*** FUZZY FINDER KEY BINDINGS ***"
@@ -704,7 +725,7 @@ sudo /home/admin/_cache.sh ramdisk on
 sudo /home/admin/_cache.sh keyvalue on
 
 # *** Wifi, Bluetooth & other RaspberryPi configs ***
-if [ "${baseimage}" = "raspios_arm64"  ] || [ "${baseimage}" = "debian_rpi64" ]; then
+if [ "${baseimage}" = "raspios_arm64" ] || [ "${baseimage}" = "debian_rpi64" ]; then
 
   if [ "${wifi_region}" == "off" ]; then
     echo -e "\n*** DISABLE WIFI ***"
