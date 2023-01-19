@@ -13,9 +13,9 @@ if [ "$1" == "only-one-loop" ]; then
 fi
 # start with parameter "install" (to setup service as systemd background running)
 if [ "$1" == "install" ]; then
-  
+
   # write systemd service
-  cat > /etc/systemd/system/background.scan.service <<EOF
+  cat >/etc/systemd/system/background.scan.service <<EOF
 # Monitor the RaspiBlitz State
 # /etc/systemd/system/background.scan.service
 
@@ -74,7 +74,7 @@ YEAR=31536000
 usermod -G bitcoin root
 
 ####################################################################
-# INIT 
+# INIT
 ####################################################################
 
 # init values
@@ -106,10 +106,11 @@ echo "importing: _version.info"
 /home/admin/_cache.sh import /home/admin/_version.info
 
 # basic hardware info (will not change)
-source <(/home/admin/_cache.sh valid \
-  system_board \
-  system_ram_mb \
-  system_ram_gb \
+source <(
+  /home/admin/_cache.sh valid \
+    system_board \
+    system_ram_mb \
+    system_ram_gb
 )
 if [ "${stillvalid}" == "0" ]; then
   source <(/home/admin/config.scripts/blitz.hardware.sh status)
@@ -128,12 +129,11 @@ fi
 # flag that init was done (will be checked on each loop)
 /home/admin/_cache.sh set system_init_time "$(date +%s)"
 
-while [ 1 ]
-do
+while [ 1 ]; do
 
   ####################################################################
-  # LOOP DATA (BASIC SYSTEM) 
-  # data that is always available 
+  # LOOP DATA (BASIC SYSTEM)
+  # data that is always available
   ####################################################################
 
   # check that redis contains init data (detect possible restart of redis)
@@ -147,7 +147,7 @@ do
   startTime=$(date +%s)
 
   #################
-  # BASIC SYSTEM 
+  # BASIC SYSTEM
 
   # uptime just do on every run
   system_up=$(cat /proc/uptime | grep -o '^[0-9]\+')
@@ -160,7 +160,7 @@ do
   # cpu temp - no measurement in a VM
   if [ -d "/sys/class/thermal/thermal_zone0/" ]; then
     cpu=$(cat /sys/class/thermal/thermal_zone0/temp)
-    tempC=$((cpu/1000))
+    tempC=$((cpu / 1000))
     tempF=$(((tempC * 18 + 325) / 10))
     /home/admin/_cache.sh set system_temp_celsius "${tempC}"
     /home/admin/_cache.sh set system_temp_fahrenheit "${tempF}"
@@ -203,31 +203,33 @@ do
   #################
   # DATADRIVE
 
-  source <(/home/admin/_cache.sh valid \
-    hdd_mounted \
-    hdd_ssd \
-    hdd_btrfs \
-    hdd_raid \
-    hdd_uasp \
-    hdd_capacity_bytes \
-    hdd_capacity_gb \
-    hdd_free_bytes \
-    hdd_free_gb \
-    hdd_used_info \
-    hdd_blockchain_data \
+  source <(
+    /home/admin/_cache.sh valid \
+      hdd_mounted \
+      hdd_ssd \
+      hdd_btrfs \
+      hdd_raid \
+      hdd_uasp \
+      hdd_capacity_bytes \
+      hdd_capacity_gb \
+      hdd_free_bytes \
+      hdd_free_gb \
+      hdd_used_info \
+      hdd_blockchain_data
   )
 
   #################
   # INTERNET
 
-   # GLOBAL & PUBLIC IP
+  # GLOBAL & PUBLIC IP
   source <(/home/admin/_cache.sh get runBehindTor)
   if [ "${runBehindTor}" == "off" ]; then
-    source <(/home/admin/_cache.sh valid \
-      internet_public_ipv6 \
-      internet_public_ip_detected \
-      internet_public_ip_forced \
-      internet_public_ip_clean \
+    source <(
+      /home/admin/_cache.sh valid \
+        internet_public_ipv6 \
+        internet_public_ip_detected \
+        internet_public_ip_forced \
+        internet_public_ip_clean
     )
     if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${HOUR} ]; then
       echo "updating: /home/admin/config.scripts/internet.sh status global"
@@ -243,12 +245,13 @@ do
   fi
 
   # LOCAL IP & data
-  source <(/home/admin/_cache.sh valid \
-    internet_localip \
-    internet_localiprange \
-    internet_dhcp \
-    internet_rx \
-    internet_tx \
+  source <(
+    /home/admin/_cache.sh valid \
+      internet_localip \
+      internet_localiprange \
+      internet_dhcp \
+      internet_rx \
+      internet_tx
   )
   if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${MINUTE} ]; then
     echo "updating: /home/admin/config.scripts/internet.sh status local"
@@ -271,20 +274,20 @@ do
   # exit if still setup or higher system stopped
   source <(/home/admin/_cache.sh get setupPhase state)
   if [ "${setupPhase}" != "done" ] ||
-     [ "${state}" == "" ] ||
-     [ "${state}" == "copysource" ] ||
-     [ "${state}" == "copytarget" ]; then
+    [ "${state}" == "" ] ||
+    [ "${state}" == "copysource" ] ||
+    [ "${state}" == "copytarget" ]; then
 
-      # dont skip when setup/recovery is in "waitsync" state
-      if [ "${state}" != "waitsync" ]; then
-        endTime=$(date +%s)
-        runTime=$((${endTime}-${startTime}))
-        # write info on scan runtime into cache (use as signal that the first systemscan worked)
-        /home/admin/_cache.sh set systemscan_runtime "${runTime}"
-        echo "Skipping deeper system scan - setupPhase(${setupPhase}) state(${state})"
-        sleep 1
-        continue
-      fi
+    # dont skip when setup/recovery is in "waitsync" state
+    if [ "${state}" != "waitsync" ]; then
+      endTime=$(date +%s)
+      runTime=$((${endTime} - ${startTime}))
+      # write info on scan runtime into cache (use as signal that the first systemscan worked)
+      /home/admin/_cache.sh set systemscan_runtime "${runTime}"
+      echo "Skipping deeper system scan - setupPhase(${setupPhase}) state(${state})"
+      sleep 1
+      continue
+    fi
 
   fi
 
@@ -301,7 +304,7 @@ do
 
   if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${MINUTE2} ]; then
     echo "updating: /home/admin/config.scripts/blitz.datadrive.sh status"
-    source <(/home/admin/config.scripts/blitz.datadrive.sh status)
+    # source <(/home/admin/config.scripts/blitz.datadrive.sh status)
     /home/admin/_cache.sh set hdd_mounted "${isMounted}"
     /home/admin/_cache.sh set hdd_ssd "${isSSD}"
     /home/admin/_cache.sh set hdd_btrfs "${isBTRFS}"
@@ -318,12 +321,14 @@ do
   ###################
   # BITCOIN
 
+  network=bitcoin
+  CHAIN=sig
+
   if [ "${network}" == "bitcoin" ]; then
 
     # loop thru mainet, testnet & signet
-    networks=( "main" "test" "sig" )
-    for CHAIN in "${networks[@]}"
-    do
+    networks=("main" "test" "sig")
+    for CHAIN in "${networks[@]}"; do
 
       # check if is default chain (multiple networks can run at the same time - but only one is default)
       isDefaultChain=$(echo "${CHAIN}" | grep -c "${chain}")
@@ -353,22 +358,24 @@ do
       fi
 
       # update basic status values always
-      source <(/home/admin/_cache.sh valid \
-        btc_${CHAIN}net_version \
-        btc_${CHAIN}net_running \
-        btc_${CHAIN}net_ready \
-        btc_${CHAIN}net_online  \
-        btc_${CHAIN}net_error_short \
-        btc_${CHAIN}net_error_full \
+      source <(
+        /home/admin/_cache.sh valid \
+          btc_${CHAIN}net_version \
+          btc_${CHAIN}net_running \
+          btc_${CHAIN}net_ready \
+          btc_${CHAIN}net_online \
+          btc_${CHAIN}net_error_short \
+          btc_${CHAIN}net_error_full
       )
       if [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        btc_default_version \
-        btc_default_running \
-        btc_default_ready \
-        btc_default_online  \
-        btc_default_error_short \
-        btc_default_error_full \
+        source <(
+          /home/admin/_cache.sh valid \
+            btc_default_version \
+            btc_default_running \
+            btc_default_ready \
+            btc_default_online \
+            btc_default_error_short \
+            btc_default_error_full
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_QUICK} ]; then
@@ -396,27 +403,29 @@ do
 
       # update detail infos only when ready (get as value from cache)
       source <(/home/admin/_cache.sh meta btc_${CHAIN}net_ready)
-      if [ "${value}" == "1" ]; then 
+      if [ "${value}" == "1" ]; then
 
         # check if network needs update
-        source <(/home/admin/_cache.sh valid \
-          btc_${CHAIN}net_synced \
-          btc_${CHAIN}net_blocks_headers \
-          btc_${CHAIN}net_blocks_verified \
-          btc_${CHAIN}net_blocks_behind \
-          btc_${CHAIN}net_sync_progress \
-          btc_${CHAIN}net_sync_percentage \
-          btc_${CHAIN}net_sync_initialblockdownload \
+        source <(
+          /home/admin/_cache.sh valid \
+            btc_${CHAIN}net_synced \
+            btc_${CHAIN}net_blocks_headers \
+            btc_${CHAIN}net_blocks_verified \
+            btc_${CHAIN}net_blocks_behind \
+            btc_${CHAIN}net_sync_progress \
+            btc_${CHAIN}net_sync_percentage \
+            btc_${CHAIN}net_sync_initialblockdownload
         )
         if [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-          source <(/home/admin/_cache.sh valid \
-          btc_default_synced \
-          btc_default_blocks_headers \
-          btc_default_blocks_verified \
-          btc_default_blocks_behind \
-          btc_default_sync_progress \
-          btc_default_sync_percentage \
-          btc_default_sync_initialblockdownload \
+          source <(
+            /home/admin/_cache.sh valid \
+              btc_default_synced \
+              btc_default_blocks_headers \
+              btc_default_blocks_verified \
+              btc_default_blocks_behind \
+              btc_default_sync_progress \
+              btc_default_sync_percentage \
+              btc_default_sync_initialblockdownload
           )
         fi
         if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_MID} ]; then
@@ -432,7 +441,7 @@ do
             /home/admin/_cache.sh set btc_${CHAIN}net_sync_progress "${btc_sync_progress}"
             /home/admin/_cache.sh set btc_${CHAIN}net_sync_percentage "${btc_sync_percentage}"
             /home/admin/_cache.sh set btc_${CHAIN}net_sync_initialblockdownload "${btc_sync_initialblockdownload}"
-            
+
             if [ "${isDefaultChain}" == "1" ]; then
               /home/admin/_cache.sh set btc_default_synced "${btc_synced}"
               /home/admin/_cache.sh set btc_default_blocks_headers "${btc_blocks_headers}"
@@ -450,16 +459,18 @@ do
         fi
 
         # check if network needs update
-        source <(/home/admin/_cache.sh valid \
-          btc_${CHAIN}net_peers \
-          btc_${CHAIN}net_address \
-          btc_${CHAIN}net_port \
+        source <(
+          /home/admin/_cache.sh valid \
+            btc_${CHAIN}net_peers \
+            btc_${CHAIN}net_address \
+            btc_${CHAIN}net_port
         )
         if [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-          source <(/home/admin/_cache.sh valid \
-          btc_default_peers \
-          btc_default_address \
-          btc_default_port \
+          source <(
+            /home/admin/_cache.sh valid \
+              btc_default_peers \
+              btc_default_address \
+              btc_default_port
           )
         fi
         if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_MID} ]; then
@@ -481,12 +492,14 @@ do
         fi
 
         # check if mempool needs update
-        source <(/home/admin/_cache.sh valid \
-          btc_${CHAIN}net_mempool_transactions \
+        source <(
+          /home/admin/_cache.sh valid \
+            btc_${CHAIN}net_mempool_transactions
         )
         if [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-          source <(/home/admin/_cache.sh valid \
-          btc_default_mempool_transactions \
+          source <(
+            /home/admin/_cache.sh valid \
+              btc_default_mempool_transactions
           )
         fi
         if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_LONG} ]; then
@@ -510,9 +523,8 @@ do
   # Lightning (lnd)
 
   # loop thru mainet, testnet & signet
-  networks=( "main" "test" "sig" )
-  for CHAIN in "${networks[@]}"
-  do
+  networks=("main" "test" "sig")
+  for CHAIN in "${networks[@]}"; do
 
     # skip if network is not on by config
     if [ "${CHAIN}" == "main" ] && [ "${lnd}" != "on" ]; then
@@ -543,24 +555,26 @@ do
     fi
 
     # update basic status values always
-    source <(/home/admin/_cache.sh valid \
-      ln_lnd_${CHAIN}net_locked \
-      ln_lnd_${CHAIN}net_version \
-      ln_lnd_${CHAIN}net_running \
-      ln_lnd_${CHAIN}net_ready \
-      ln_lnd_${CHAIN}net_online \
-      ln_lnd_${CHAIN}net_error_short \
-      ln_lnd_${CHAIN}net_error_full \
+    source <(
+      /home/admin/_cache.sh valid \
+        ln_lnd_${CHAIN}net_locked \
+        ln_lnd_${CHAIN}net_version \
+        ln_lnd_${CHAIN}net_running \
+        ln_lnd_${CHAIN}net_ready \
+        ln_lnd_${CHAIN}net_online \
+        ln_lnd_${CHAIN}net_error_short \
+        ln_lnd_${CHAIN}net_error_full
     )
     if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-      source <(/home/admin/_cache.sh valid \
-      ln_default_locked \
-      ln_default_version \
-      ln_default_running \
-      ln_default_ready \
-      ln_default_online \
-      ln_default_error_short \
-      ln_default_error_full \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_default_locked \
+          ln_default_version \
+          ln_default_running \
+          ln_default_ready \
+          ln_default_online \
+          ln_default_error_short \
+          ln_default_error_full
       )
     fi
     if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_QUICK} ]; then
@@ -607,32 +621,34 @@ do
       fi
 
       # check if info needs update
-      source <(/home/admin/_cache.sh valid \
-        ln_lnd_${CHAIN}net_address \
-        ln_lnd_${CHAIN}net_tor \
-        ln_lnd_${CHAIN}net_sync_chain \
-        ln_lnd_${CHAIN}net_sync_graph \
-        ln_lnd_${CHAIN}net_channels_pending \
-        ln_lnd_${CHAIN}net_channels_active \
-        ln_lnd_${CHAIN}net_channels_inactive \
-        ln_lnd_${CHAIN}net_channels_total \
-        ln_lnd_${CHAIN}net_peers \
-        ln_lnd_${CHAIN}net_recovery_mode \
-        ln_lnd_${CHAIN}net_recovery_done \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_lnd_${CHAIN}net_address \
+          ln_lnd_${CHAIN}net_tor \
+          ln_lnd_${CHAIN}net_sync_chain \
+          ln_lnd_${CHAIN}net_sync_graph \
+          ln_lnd_${CHAIN}net_channels_pending \
+          ln_lnd_${CHAIN}net_channels_active \
+          ln_lnd_${CHAIN}net_channels_inactive \
+          ln_lnd_${CHAIN}net_channels_total \
+          ln_lnd_${CHAIN}net_peers \
+          ln_lnd_${CHAIN}net_recovery_mode \
+          ln_lnd_${CHAIN}net_recovery_done
       )
       if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        ln_default_address \
-        ln_default_tor \
-        ln_default_sync_chain \
-        ln_default_sync_progress \
-        ln_default_channels_pending \
-        ln_default_channels_active \
-        ln_default_channels_inactive \
-        ln_default_channels_total \
-        ln_default_peers \
-        ln_default_recovery_mode \
-        ln_default_recovery_done \
+        source <(
+          /home/admin/_cache.sh valid \
+            ln_default_address \
+            ln_default_tor \
+            ln_default_sync_chain \
+            ln_default_sync_progress \
+            ln_default_channels_pending \
+            ln_default_channels_active \
+            ln_default_channels_inactive \
+            ln_default_channels_total \
+            ln_default_peers \
+            ln_default_recovery_mode \
+            ln_default_recovery_done
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_MID} ]; then
@@ -671,18 +687,20 @@ do
       fi
 
       # check if wallet needs update
-      source <(/home/admin/_cache.sh valid \
-        ln_lnd_${CHAIN}net_wallet_onchain_balance \
-        ln_lnd_${CHAIN}net_wallet_onchain_pending \
-        ln_lnd_${CHAIN}net_wallet_channels_balance \
-        ln_lnd_${CHAIN}net_wallet_channels_pending \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_lnd_${CHAIN}net_wallet_onchain_balance \
+          ln_lnd_${CHAIN}net_wallet_onchain_pending \
+          ln_lnd_${CHAIN}net_wallet_channels_balance \
+          ln_lnd_${CHAIN}net_wallet_channels_pending
       )
       if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        ln_default_wallet_onchain_balance \
-        ln_default_wallet_onchain_pending \
-        ln_default_wallet_channels_balance \
-        ln_default_wallet_channels_pending \
+        source <(
+          /home/admin/_cache.sh valid \
+            ln_default_wallet_onchain_balance \
+            ln_default_wallet_onchain_pending \
+            ln_default_wallet_channels_balance \
+            ln_default_wallet_channels_pending
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_QUICK} ]; then
@@ -706,15 +724,17 @@ do
       fi
 
       # check if fees needs update
-      source <(/home/admin/_cache.sh valid \
-        ln_lnd_${CHAIN}net_fees_daily \
-        ln_lnd_${CHAIN}net_fees_weekly \
-        ln_lnd_${CHAIN}net_fees_month \
-        ln_lnd_${CHAIN}net_fees_total \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_lnd_${CHAIN}net_fees_daily \
+          ln_lnd_${CHAIN}net_fees_weekly \
+          ln_lnd_${CHAIN}net_fees_month \
+          ln_lnd_${CHAIN}net_fees_total
       )
       if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        ln_default_fees_total \
+        source <(
+          /home/admin/_cache.sh valid \
+            ln_default_fees_total
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_LONG} ]; then
@@ -740,9 +760,8 @@ do
   # Lightning (Core Lightning)
 
   # loop thru mainet, testnet & signet
-  networks=( "main" "test" "sig" )
-  for CHAIN in "${networks[@]}"
-  do
+  networks=("main" "test" "sig")
+  for CHAIN in "${networks[@]}"; do
 
     # skip if network is not on by config
     if [ "${CHAIN}" == "main" ] && [ "${cl}" != "on" ]; then
@@ -775,22 +794,24 @@ do
     # TODO: c-lightning is seen as "always unlocked" for now - needs to be implemented later #2691
 
     # update basic status values always
-    source <(/home/admin/_cache.sh valid \
-      ln_cl_${CHAIN}net_version \
-      ln_cl_${CHAIN}net_running \
-      ln_cl_${CHAIN}net_ready \
-      ln_cl_${CHAIN}net_online \
-      ln_cl_${CHAIN}net_error_short \
-      ln_cl_${CHAIN}net_error_full \
+    source <(
+      /home/admin/_cache.sh valid \
+        ln_cl_${CHAIN}net_version \
+        ln_cl_${CHAIN}net_running \
+        ln_cl_${CHAIN}net_ready \
+        ln_cl_${CHAIN}net_online \
+        ln_cl_${CHAIN}net_error_short \
+        ln_cl_${CHAIN}net_error_full
     )
     if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-      source <(/home/admin/_cache.sh valid \
-      ln_default_version \
-      ln_default_running \
-      ln_default_ready \
-      ln_default_online \
-      ln_default_error_short \
-      ln_default_error_full \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_default_version \
+          ln_default_running \
+          ln_default_ready \
+          ln_default_online \
+          ln_default_error_short \
+          ln_default_error_full
       )
     fi
     if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_QUICK} ]; then
@@ -821,30 +842,32 @@ do
     if [ "${value}" == "1" ]; then
 
       # check if info needs update
-      source <(/home/admin/_cache.sh valid \
-        ln_cl_${CHAIN}net_alias \
-        ln_cl_${CHAIN}net_address \
-        ln_cl_${CHAIN}net_tor \
-        ln_cl_${CHAIN}net_peers \
-        ln_cl_${CHAIN}net_sync_chain \
-        ln_cl_${CHAIN}net_channels_pending \
-        ln_cl_${CHAIN}net_channels_active \
-        ln_cl_${CHAIN}net_channels_inactive \
-        ln_cl_${CHAIN}net_channels_total \
-        ln_cl_${CHAIN}net_fees_total \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_cl_${CHAIN}net_alias \
+          ln_cl_${CHAIN}net_address \
+          ln_cl_${CHAIN}net_tor \
+          ln_cl_${CHAIN}net_peers \
+          ln_cl_${CHAIN}net_sync_chain \
+          ln_cl_${CHAIN}net_channels_pending \
+          ln_cl_${CHAIN}net_channels_active \
+          ln_cl_${CHAIN}net_channels_inactive \
+          ln_cl_${CHAIN}net_channels_total \
+          ln_cl_${CHAIN}net_fees_total
       )
       if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        ln_default_alias \
-        ln_default_address \
-        ln_default_tor \
-        ln_default_peers \
-        ln_default_sync_chain \
-        ln_default_channels_pending \
-        ln_default_channels_active \
-        ln_default_channels_inactive \
-        ln_default_channels_total \
-        ln_default_fees_total \
+        source <(
+          /home/admin/_cache.sh valid \
+            ln_default_alias \
+            ln_default_address \
+            ln_default_tor \
+            ln_default_peers \
+            ln_default_sync_chain \
+            ln_default_channels_pending \
+            ln_default_channels_active \
+            ln_default_channels_inactive \
+            ln_default_channels_total \
+            ln_default_fees_total
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_MID} ]; then
@@ -887,18 +910,20 @@ do
       fi
 
       # check if wallet needs update
-      source <(/home/admin/_cache.sh valid \
-        ln_cl_${CHAIN}net_wallet_onchain_balance \
-        ln_cl_${CHAIN}net_wallet_onchain_pending \
-        ln_cl_${CHAIN}net_wallet_channels_balance \
-        ln_cl_${CHAIN}net_wallet_channels_pending \
+      source <(
+        /home/admin/_cache.sh valid \
+          ln_cl_${CHAIN}net_wallet_onchain_balance \
+          ln_cl_${CHAIN}net_wallet_onchain_pending \
+          ln_cl_${CHAIN}net_wallet_channels_balance \
+          ln_cl_${CHAIN}net_wallet_channels_pending
       )
       if [ "${isDefaultLightning}" == "1" ] && [ "${isDefaultChain}" == "1" ] && [ "${stillvalid}" == "1" ]; then
-        source <(/home/admin/_cache.sh valid \
-        ln_default_wallet_onchain_balance \
-        ln_default_wallet_onchain_pending \
-        ln_default_wallet_channels_balance \
-        ln_default_wallet_channels_pending \
+        source <(
+          /home/admin/_cache.sh valid \
+            ln_default_wallet_onchain_balance \
+            ln_default_wallet_onchain_pending \
+            ln_default_wallet_channels_balance \
+            ln_default_wallet_channels_pending
         )
       fi
       if [ "${stillvalid}" == "0" ] || [ ${age} -gt ${CYCLE_MID} ]; then
@@ -931,8 +956,8 @@ do
   ln_default_sync_initial_done=0
   ln_all_sync_initial_done=1
   blitz_sync_initial_done=0
-  networks=( "main" "test" "sig" )
-  sedondLayers=( "lnd" "cl" )
+  networks=("main" "test" "sig")
+  sedondLayers=("lnd" "cl")
 
   # if default is mainnet, then consider mainnet=on
   if [ "${chain}" == "main" ]; then
@@ -940,8 +965,7 @@ do
   fi
 
   # loop over all chains
-  for CHAIN in "${networks[@]}"
-  do
+  for CHAIN in "${networks[@]}"; do
 
     # skip if this network is not switched on
     btc_service_name="${CHAIN}net"
@@ -965,8 +989,7 @@ do
     fi
 
     # sub loop over all layer 2 on that chain
-    for LN in "${sedondLayers[@]}"
-    do
+    for LN in "${sedondLayers[@]}"; do
 
       # skip if this variant is not switched on
       ln_service_name="${LN}"
@@ -1026,7 +1049,7 @@ do
 
   # calculate how many seconds the script was running
   endTime=$(date +%s)
-  runTime=$((${endTime}-${startTime}))
+  runTime=$((${endTime} - ${startTime}))
 
   # write info on scan runtime into cache (use as signal that the first systemscan worked)
   /home/admin/_cache.sh set systemscan_runtime "${runTime}"
@@ -1044,7 +1067,7 @@ do
   # if was started with special parameter
   if [ "${ONLY_ONE_LOOP}" == "1" ]; then
     echo "Exiting because ONLY_ONE_LOOP==1"
-    exit 0 
+    exit 0
   fi
 
 done

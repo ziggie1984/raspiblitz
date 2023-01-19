@@ -623,7 +623,7 @@ if [ ${isMounted} -eq 0 ]; then
       network="bitcoin"
     fi
     if [ "${chain}" == "" ]; then
-      chain="signet"
+      chain="sig"
     fi
 
     # source the raspiblitz version
