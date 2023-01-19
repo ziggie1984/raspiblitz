@@ -12,7 +12,7 @@ source /home/admin/_version.info
 
 # CONFIGFILE - configuration of RaspiBlitz
 # used by fresh SD image to recover configuration
-# and delivers basic config info for scripts 
+# and delivers basic config info for scripts
 configFile="/mnt/hdd/raspiblitz.conf"
 
 # LOGFILE - store debug logs of bootstrap
@@ -29,16 +29,16 @@ setupFile="/var/cache/raspiblitz/temp/raspiblitz.setup"
 
 # Init boostrap log file
 echo "Writing logs to: ${logFile}"
-echo "" > $logFile
+echo "" >$logFile
 sudo chmod 640 ${logFile}
 sudo chown root:sudo ${logFile}
-echo "***********************************************" >> $logFile
-echo "Running RaspiBlitz Bootstrap ${codeVersion}" >> $logFile
-date >> $logFile
-echo "***********************************************" >> $logFile
+echo "***********************************************" >>$logFile
+echo "Running RaspiBlitz Bootstrap ${codeVersion}" >>$logFile
+date >>$logFile
+echo "***********************************************" >>$logFile
 
 # make sure SSH server is configured & running
-sudo /home/admin/config.scripts/blitz.ssh.sh checkrepair >> ${logFile}
+sudo /home/admin/config.scripts/blitz.ssh.sh checkrepair >>${logFile}
 
 # make sure /var/cache/raspiblitz/temp exists
 sudo mkdir -p /var/cache/raspiblitz/temp
@@ -49,7 +49,7 @@ sudo chmod 777 /var/cache/raspiblitz/temp
 ################################
 # raspiblitz.info contains the persisted system state
 # that either given by build or has to survive a reboot
-echo "## INIT raspiblitz.info" >> $logFile
+echo "## INIT raspiblitz.info" >>$logFile
 
 # set default values for raspiblitz.info (that are not set by build_sdcard.sh)
 
@@ -74,41 +74,40 @@ ln_cl_signet_sync_initial_done=0
 source ${infoFile} 2>/dev/null
 
 # write fresh raspiblitz.info file
-echo "baseimage=${baseimage}" > $infoFile
-echo "cpu=${cpu}" >> $infoFile
-echo "blitzapi=${blitzapi}" >> $infoFile
-echo "displayClass=${displayClass}" >> $infoFile
-echo "displayType=${displayType}" >> $infoFile
-echo "setupPhase=${setupPhase}" >> $infoFile
-echo "setupStep=${setupStep}" >> $infoFile
-echo "fsexpanded=${fsexpanded}" >> $infoFile
-echo "state=starting" >> $infoFile
-echo "btc_mainnet_sync_initial_done=${btc_mainnet_sync_initial_done}" >> $infoFile
-echo "btc_testnet_sync_initial_done=${btc_testnet_sync_initial_done}" >> $infoFile
-echo "btc_signet_sync_initial_done=${btc_signet_sync_initial_done}" >> $infoFile
-echo "ln_lnd_mainnet_sync_initial_done=${ln_lnd_mainnet_sync_initial_done}" >> $infoFile
-echo "ln_lnd_testnet_sync_initial_done=${ln_lnd_testnet_sync_initial_done}" >> $infoFile
-echo "ln_lnd_signet_sync_initial_done=${ln_lnd_signet_sync_initial_done}" >> $infoFile
-echo "ln_cl_mainnet_sync_initial_done=${ln_cl_mainnet_sync_initial_done}" >> $infoFile
-echo "ln_cl_testnet_sync_initial_done=${ln_cl_testnet_sync_initial_done}" >> $infoFile
-echo "ln_cl_signet_sync_initial_done=${ln_cl_signet_sync_initial_done}" >> $infoFile
+echo "baseimage=${baseimage}" >$infoFile
+echo "cpu=${cpu}" >>$infoFile
+echo "blitzapi=${blitzapi}" >>$infoFile
+echo "displayClass=${displayClass}" >>$infoFile
+echo "displayType=${displayType}" >>$infoFile
+echo "setupPhase=${setupPhase}" >>$infoFile
+echo "setupStep=${setupStep}" >>$infoFile
+echo "fsexpanded=${fsexpanded}" >>$infoFile
+echo "state=starting" >>$infoFile
+echo "btc_mainnet_sync_initial_done=${btc_mainnet_sync_initial_done}" >>$infoFile
+echo "btc_testnet_sync_initial_done=${btc_testnet_sync_initial_done}" >>$infoFile
+echo "btc_signet_sync_initial_done=${btc_signet_sync_initial_done}" >>$infoFile
+echo "ln_lnd_mainnet_sync_initial_done=${ln_lnd_mainnet_sync_initial_done}" >>$infoFile
+echo "ln_lnd_testnet_sync_initial_done=${ln_lnd_testnet_sync_initial_done}" >>$infoFile
+echo "ln_lnd_signet_sync_initial_done=${ln_lnd_signet_sync_initial_done}" >>$infoFile
+echo "ln_cl_mainnet_sync_initial_done=${ln_cl_mainnet_sync_initial_done}" >>$infoFile
+echo "ln_cl_testnet_sync_initial_done=${ln_cl_testnet_sync_initial_done}" >>$infoFile
+echo "ln_cl_signet_sync_initial_done=${ln_cl_signet_sync_initial_done}" >>$infoFile
 
 sudo chmod 664 ${infoFile}
 
 # write content of raspiblitz.info to logs
-cat $infoFile >> $logFile
+cat $infoFile >>$logFile
 
 #########################
 # INIT RaspiBlitz Cache
 #########################
 
-echo "## INIT RaspiBlitz Cache ... wait background.scan.service to finish first scan loop" >> $logFile
+echo "## INIT RaspiBlitz Cache ... wait background.scan.service to finish first scan loop" >>$logFile
 systemscan_runtime=""
-while [ "${systemscan_runtime}" == "" ]
-do
+while [ "${systemscan_runtime}" == "" ]; do
   sleep 1
   source <(/home/admin/_cache.sh get systemscan_runtime)
-  echo "- waiting for background.scan.service --> systemscan_runtime(${systemscan_runtime})" >> $logFile
+  echo "- waiting for background.scan.service --> systemscan_runtime(${systemscan_runtime})" >>$logFile
 done
 
 # make sure latest info file is imported
@@ -136,7 +135,7 @@ if [ "${flagExists}" == "1" ]; then
   /home/admin/_cache.sh set state "stop"
   /home/admin/_cache.sh set message "stopped for manual provision"
   # log info
-  echo "INFO: 'bootstrap stopped - run release after manual provison'" >> ${logFile}
+  echo "INFO: 'bootstrap stopped - run release after manual provison'" >>${logFile}
   exit 0
 fi
 
@@ -146,7 +145,7 @@ if [ "${provisionFlagExists}" == "1" ]; then
   sudo systemctl stop ${network}d 2>/dev/null
   /home/admin/_cache.sh set state "inconsistentsystem"
   /home/admin/_cache.sh set message "provision did not ran thru"
-  echo "FAIL: 'provision did not ran thru' - need fresh sd card!" >> ${logFile}
+  echo "FAIL: 'provision did not ran thru' - need fresh sd card!" >>${logFile}
   exit 1
 fi
 
@@ -172,39 +171,40 @@ sleep 5
 echo "*** Checking Log Size ***"
 logsMegaByte=$(sudo du -c -m /var/log | grep "total" | awk '{print $1;}')
 if [ ${logsMegaByte} -gt 1000 ]; then
-  echo "WARN # Logs /var/log in are bigger then 1GB" >> $logFile
+  echo "WARN # Logs /var/log in are bigger then 1GB" >>$logFile
   # dont delete directories - can make services crash
   sudo rm /var/log/*
   sudo service rsyslog restart
   /home/admin/_cache.sh set message "WARNING: /var/log/ >1GB"
-  echo "WARN # Logs in /var/log in were bigger then 1GB and got emergency delete to prevent fillup." >> $logFile
-  echo "If you see this in the logs please report to the GitHub issues, so LOG config needs to be optimized." >> $logFile
+  echo "WARN # Logs in /var/log in were bigger then 1GB and got emergency delete to prevent fillup." >>$logFile
+  echo "If you see this in the logs please report to the GitHub issues, so LOG config needs to be optimized." >>$logFile
   sleep 10
 else
-  echo "OK - logs are at ${logsMegaByte} MB - within safety limit" >> $logFile
+  echo "OK - logs are at ${logsMegaByte} MB - within safety limit" >>$logFile
 fi
 echo ""
 
 # get the state of data drive
-source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
+# source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
+# Experimental
+isMounted=1
 
 ################################
 # WAIT LOOP: HDD CONNECTED
 ################################
 
-echo "Waiting for HDD/SSD ..." >> $logFile
-sudo ls -la /etc/ssh >> $logFile 
-until [ ${isMounted} -eq 1 ] || [ ${#hddCandidate} -gt 0 ]
-do
+echo "Waiting for HDD/SSD ..." >>$logFile
+sudo ls -la /etc/ssh >>$logFile
+until [ ${isMounted} -eq 1 ] || [ ${#hddCandidate} -gt 0 ]; do
 
   # recheck HDD/SSD
   source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
-  echo "isMounted: $isMounted" >> $logFile
-  echo "hddCandidate: $hddCandidate" >> $logFile
+  echo "isMounted: $isMounted" >>$logFile
+  echo "hddCandidate: $hddCandidate" >>$logFile
 
   # in case of HDD analyse ERROR
   if [ "${hddError}" != "" ]; then
-    echo "FAIL - error on HDD analysis: ${hddError}" >> $logFile
+    echo "FAIL - error on HDD analysis: ${hddError}" >>$logFile
     /home/admin/_cache.sh set state "errorHDD"
     /home/admin/_cache.sh set message "${hddError}"
   elif [ "${isMounted}" == "0" ] && [ "${hddCandidate}" == "" ]; then
@@ -216,7 +216,7 @@ do
   sleep 2
 
 done
-echo "HDD/SSD connected: ${hddCandidate}" >> $logFile
+echo "HDD/SSD connected: ${hddCandidate}" >>$logFile
 
 # write info for LCD
 /home/admin/_cache.sh set state "system-init"
@@ -238,12 +238,12 @@ if [ ${forceHDMIoutput} -eq 1 ]; then
   # delete that file (to prevent loop)
   sudo rm /boot/hdmi*
   # switch to HDMI what will trigger reboot
-  echo "HDMI switch found ... activating HDMI display output & reboot" >> $logFile
-  sudo /home/admin/config.scripts/blitz.display.sh set-display hdmi >> $logFile
+  echo "HDMI switch found ... activating HDMI display output & reboot" >>$logFile
+  sudo /home/admin/config.scripts/blitz.display.sh set-display hdmi >>$logFile
   systemInitReboot=1
   /home/admin/_cache.sh set message "HDMI"
 else
-  echo "No HDMI switch found. " >> $logFile
+  echo "No HDMI switch found. " >>$logFile
 fi
 
 ################################
@@ -253,23 +253,23 @@ fi
 
 source <(sudo /home/admin/config.scripts/blitz.bootdrive.sh status)
 if [ "${needsExpansion}" == "1" ] && [ "${fsexpanded}" == "0" ]; then
-  echo "FSEXPAND needed ... starting process" >> $logFile
-  sudo /home/admin/config.scripts/blitz.bootdrive.sh status >> $logFile
-  sudo /home/admin/config.scripts/blitz.bootdrive.sh fsexpand >> $logFile
+  echo "FSEXPAND needed ... starting process" >>$logFile
+  sudo /home/admin/config.scripts/blitz.bootdrive.sh status >>$logFile
+  sudo /home/admin/config.scripts/blitz.bootdrive.sh fsexpand >>$logFile
   systemInitReboot=1
   /home/admin/_cache.sh set message "FSEXPAND"
 elif [ "${tooSmall}" == "1" ]; then
-  echo "# FAIL #######" >> $logFile
-  echo "SDCARD TOO SMALL 16GB minimum" >> $logFile
-  echo "##############" >> $logFile
+  echo "# FAIL #######" >>$logFile
+  echo "SDCARD TOO SMALL 16GB minimum" >>$logFile
+  echo "##############" >>$logFile
   /home/admin/_cache.sh set state "sdtoosmall"
-  echo "System stopped. Please cut power." >> $logFile
+  echo "System stopped. Please cut power." >>$logFile
   sleep 6000
   sudo shutdown -r now
   slepp 100
   exit 1
 else
-  echo "No FS EXPAND needed. needsExpansion(${needsExpansion}) fsexpanded(${fsexpanded})" >> $logFile
+  echo "No FS EXPAND needed. needsExpansion(${needsExpansion}) fsexpanded(${fsexpanded})" >>$logFile
 fi
 
 # now that HDD/SSD is connected ... if relevant data from a previous RaspiBlitz was available
@@ -283,10 +283,10 @@ fi
 
 # check if there is a WIFI configuration to backup or restore
 if [ -f "/var/cache/raspiblitz/hdd-inspect/wpa_supplicant.conf" ]; then
-  echo "WIFI RESTORE from /var/cache/raspiblitz/hdd-inspect/wpa_supplicant.conf" >> $logFile
-  /home/admin/config.scripts/internet.wifi.sh backup-restore >> $logFile
+  echo "WIFI RESTORE from /var/cache/raspiblitz/hdd-inspect/wpa_supplicant.conf" >>$logFile
+  /home/admin/config.scripts/internet.wifi.sh backup-restore >>$logFile
 else
-  echo "No WIFI RESTORE because no /var/cache/raspiblitz/hdd-inspect/wpa_supplicant.conf" >> $logFile
+  echo "No WIFI RESTORE because no /var/cache/raspiblitz/hdd-inspect/wpa_supplicant.conf" >>$logFile
 fi
 
 ################################
@@ -296,10 +296,10 @@ fi
 
 if [ -d "/var/cache/raspiblitz/hdd-inspect/sshd" ]; then
   # INIT OLD SSH HOST KEYS on Update/Recovery to prevent "Unknown Host" on ssh client
-  echo "SSH SERVER CERTS RESTORE activating old SSH host keys" >> $logFile
-  /home/admin/config.scripts/blitz.ssh.sh restore /var/cache/raspiblitz/hdd-inspect/sshd/ssh >> $logFile
+  echo "SSH SERVER CERTS RESTORE activating old SSH host keys" >>$logFile
+  /home/admin/config.scripts/blitz.ssh.sh restore /var/cache/raspiblitz/hdd-inspect/sshd/ssh >>$logFile
 else
-  echo "No SSH SERVER CERTS RESTORE because no /var/cache/raspiblitz/hdd-inspect" >> $logFile
+  echo "No SSH SERVER CERTS RESTORE because no /var/cache/raspiblitz/hdd-inspect" >>$logFile
 fi
 
 ################################
@@ -312,15 +312,15 @@ fi
 sshReset=$(sudo ls /boot/ssh.reset* 2>/dev/null | grep -c reset)
 if [ ${sshReset} -eq 1 ]; then
   # delete that file (to prevent loop)
-  rm /boot/ssh.reset* >> $logFile
+  rm /boot/ssh.reset* >>$logFile
   # delete ssh certs
-  echo "SSHRESET switch found ... stopping SSH and deleting old certs" >> $logFile
-  /home/admin/config.scripts/blitz.ssh.sh renew >> $logFile
-  /home/admin/config.scripts/blitz.ssh.sh backup >> $logFile
+  echo "SSHRESET switch found ... stopping SSH and deleting old certs" >>$logFile
+  /home/admin/config.scripts/blitz.ssh.sh renew >>$logFile
+  /home/admin/config.scripts/blitz.ssh.sh backup >>$logFile
   systemInitReboot=1
   /home/admin/_cache.sh set message "SSHRESET"
 else
-  echo "No SSHRESET switch found. " >> $logFile
+  echo "No SSHRESET switch found. " >>$logFile
 fi
 
 ##################################
@@ -328,41 +328,41 @@ fi
 ##################################
 if [ -f "/var/cache/raspiblitz/hdd-inspect/raspiblitz.conf" ]; then
 
-  echo "check that display class in raspiblitz.conf from HDD is different from as it is now in raspiblitz.info ..." >> $logFile
-  
+  echo "check that display class in raspiblitz.conf from HDD is different from as it is now in raspiblitz.info ..." >>$logFile
+
   # get display class value from raspiblitz.info
   source <(cat ${infoFile} | grep "^displayClass=")
   infoFileDisplayClass="${displayClass}"
-  echo "infoFileDisplayClass(${infoFileDisplayClass})" >> $logFile
+  echo "infoFileDisplayClass(${infoFileDisplayClass})" >>$logFile
 
   # get display class value from raspiblitz.conf
   source <(cat /var/cache/raspiblitz/hdd-inspect/raspiblitz.conf | grep "^displayClass=")
   confFileDisplayClass="${displayClass}"
-  echo "confFileDisplayClass(${confFileDisplayClass})" >> $logFile
+  echo "confFileDisplayClass(${confFileDisplayClass})" >>$logFile
 
   # check if values are different and need to change
   if [ "${confFileDisplayClass}" != "" ] && [ "${infoFileDisplayClass}" != "${displayClass}" ]; then
-    echo "DISPLAY RESTORE - need to update displayClass from (${infoFileDisplayClass}) to (${confFileDisplayClass})'" >> ${logFile}
-    /home/admin/config.scripts/blitz.display.sh set-display ${confFileDisplayClass} >> ${logFile}
+    echo "DISPLAY RESTORE - need to update displayClass from (${infoFileDisplayClass}) to (${confFileDisplayClass})'" >>${logFile}
+    /home/admin/config.scripts/blitz.display.sh set-display ${confFileDisplayClass} >>${logFile}
     systemInitReboot=1
   else
-    echo "No DISPLAY RESTORE because no need to change" >> $logFile
+    echo "No DISPLAY RESTORE because no need to change" >>$logFile
   fi
 
 else
-  echo "No DISPLAY RESTORE because no /var/cache/raspiblitz/hdd-inspect/raspiblitz.conf" >> $logFile
+  echo "No DISPLAY RESTORE because no /var/cache/raspiblitz/hdd-inspect/raspiblitz.conf" >>$logFile
 fi
 
 ################################
 # UASP FIX
 ################################
 /home/admin/_cache.sh set message "checking HDD"
-source <(sudo /home/admin/config.scripts/blitz.datadrive.sh uasp-fix)
+# source <(sudo /home/admin/config.scripts/blitz.datadrive.sh uasp-fix)
 if [ "${neededReboot}" == "1" ]; then
-  echo "UASP FIX applied ... reboot needed." >> $logFile
+  echo "UASP FIX applied ... reboot needed." >>$logFile
   systemInitReboot=1
 else
-  echo "No UASP FIX needed" >> $logFile
+  echo "No UASP FIX needed" >>$logFile
 fi
 
 ######################################
@@ -383,8 +383,7 @@ fi
 # after HDD > can contain WIFI conf
 ###################################
 gotLocalIP=0
-until [ ${gotLocalIP} -eq 1 ]
-do
+until [ ${gotLocalIP} -eq 1 ]; do
 
   # get latest network info directly
   source <(/home/admin/config.scripts/internet.sh status online)
@@ -419,24 +418,24 @@ done
 /home/admin/_cache.sh set message "please wait"
 
 # get fresh info about data drive to continue
-source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
+# source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
 
-echo "isMounted: $isMounted" >> $logFile
+echo "isMounted: $isMounted" >>$logFile
 
 # check if the HDD is auto-mounted ( auto-mounted = setup-done)
-echo "HDD already part of system: $isMounted" >> $logFile
+echo "HDD already part of system: $isMounted" >>$logFile
 
 ############################
 ############################
-# WHEN SETUP IS NEEDED  
+# WHEN SETUP IS NEEDED
 ############################
-
+isMounted=1
 if [ ${isMounted} -eq 0 ]; then
 
   # temp mount the HDD
-  echo "Temp mounting (1) data drive" >> $logFile
+  echo "Temp mounting (1) data drive" >>$logFile
   source <(/home/admin/config.scripts/blitz.datadrive.sh tempmount)
-  echo "Temp mounting (1) result: ${isMounted}" >> $logFile
+  echo "Temp mounting (1) result: ${isMounted}" >>$logFile
 
   # write data needed for setup process into raspiblitz.info
   /home/admin/_cache.sh set hddCandidate "${hddCandidate}"
@@ -446,20 +445,20 @@ if [ ${isMounted} -eq 0 ]; then
   /home/admin/_cache.sh set hddGotMigrationData "${hddGotMigrationData}"
   /home/admin/_cache.sh set hddVersionLND "${hddVersionLND}"
   echo ""
-  echo "HDD is there but not AutoMounted yet - Waiting for user Setup/Update" >> $logFile
+  echo "HDD is there but not AutoMounted yet - Waiting for user Setup/Update" >>$logFile
 
   # add some debug info to logfile
-  echo "# df " >> ${logFile}
-  df >> ${logFile}
-  echo "# lsblk -o NAME,FSTYPE,LABEL " >> ${logFile}
-  lsblk -o NAME,FSTYPE,LABEL >> ${logFile}
+  echo "# df " >>${logFile}
+  df >>${logFile}
+  echo "# lsblk -o NAME,FSTYPE,LABEL " >>${logFile}
+  lsblk -o NAME,FSTYPE,LABEL >>${logFile}
   echo "# /home/admin/config.scripts/blitz.datadrive.sh status"
-  /home/admin/config.scripts/blitz.datadrive.sh status >> ${logFile}
+  /home/admin/config.scripts/blitz.datadrive.sh status >>${logFile}
 
   # determine correct setup phase
   infoMessage="Please Login for Setup"
   setupPhase="setup"
-  
+
   if [ "${hddGotMigrationData}" != "" ]; then
     infoMessage="Please Login for Migration"
     setupPhase="migration"
@@ -470,7 +469,7 @@ if [ ${isMounted} -eq 0 ]; then
       source <(/home/admin/config.scripts/lnd.install.sh info "${hddVersionLND}")
       if [ "${compatible}" != "1" ]; then
         migrationMode="outdatedLightning"
-      fi 
+      fi
     fi
     /home/admin/_cache.sh set migrationMode "${migrationMode}"
 
@@ -490,7 +489,7 @@ if [ ${isMounted} -eq 0 ]; then
   fi
 
   # signal "WAIT LOOP: SETUP" to LCD, SSH & WEBAPI
-  echo "Displaying Info Message: ${infoMessage}" >> $logFile
+  echo "Displaying Info Message: ${infoMessage}" >>$logFile
   /home/admin/_cache.sh set state "waitsetup"
   /home/admin/_cache.sh set message "${infoMessage}"
   /home/admin/_cache.sh set setupPhase "${setupPhase}"
@@ -500,12 +499,12 @@ if [ ${isMounted} -eq 0 ]; then
   # until SSH or WEBUI setup data is available
   #############################################
 
-  echo "## WAIT LOOP: USER SETUP/UPDATE/MIGRATION" >> ${logFile}
-  until [ "${state}" == "waitprovision" ]
-  do
+  echo "## WAIT LOOP: USER SETUP/UPDATE/MIGRATION" >>${logFile}
+  until [ "${state}" == "waitprovision" ]; do
 
     # get fresh info about data drive (in case the hdd gets disconnected)
-    source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
+    hddCandidate="sdcard"
+    # source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
     if [ "${hddCandidate}" == "" ]; then
       /home/admin/config.scripts/blitz.error.sh _bootstrap.sh "lost-hdd" "Lost HDD connection .. triggering reboot." "happened during WAIT LOOP: USER SETUP/UPDATE/MIGRATION" ${logFile}
       sleep 8
@@ -539,38 +538,38 @@ if [ ${isMounted} -eq 0 ]; then
 
   # refresh data from info file
   source <(/home/admin/_cache.sh get state setupPhase)
-  echo "# PROVISION PROCESS with setupPhase(${setupPhase})" >> ${logFile}
+  echo "# PROVISION PROCESS with setupPhase(${setupPhase})" >>${logFile}
 
   # mark system on sd card as in setup process
-  echo "the provision process was started but did not finish yet" > /home/admin/provision.flag
+  echo "the provision process was started but did not finish yet" >/home/admin/provision.flag
 
   # get fresh data from setup file & data drive
   source <(sudo /home/admin/config.scripts/blitz.datadrive.sh status)
   source ${setupFile}
 
   # special setup tasks (triggered by api/webui thru setupfile)
-
+  formatHDD=0
   # FORMAT DATA DRIVE
   if [ "${formatHDD}" == "1" ]; then
-    echo "# special setup tasks: FORMAT DATA DRIVE" >> ${logFile}
-      
+    echo "# special setup tasks: FORMAT DATA DRIVE" >>${logFile}
+
     # check if there is a flag set on sd card boot section to format as btrfs (experimental)
     filesystem="ext4"
     flagBTRFS=$(sudo ls /boot/btrfs* 2>/dev/null | grep -c btrfs)
     if [ "${flagBTRFS}" != "0" ]; then
-      echo "Found BTRFS flag ---> formatting with experimental BTRFS filesystem" >> ${logFile}
+      echo "Found BTRFS flag ---> formatting with experimental BTRFS filesystem" >>${logFile}
       filesystem="btrfs"
     fi
 
     # run formatting
     error=""
     /home/admin/_cache.sh set state "formathdd"
-    echo "Running Format: (${filesystem}) (${hddCandidate})" >> ${logFile}
+    echo "Running Format: (${filesystem}) (${hddCandidate})" >>${logFile}
     source <(sudo /home/admin/config.scripts/blitz.datadrive.sh format ${filesystem} ${hddCandidate})
     if [ "${error}" != "" ]; then
-      echo "FAIL ON FORMATTING THE DRIVE:" >> ${logFile}
-      echo "${error}" >> ${logFile}
-      echo "Please report as issue on the raspiblitz github." >> ${logFile}
+      echo "FAIL ON FORMATTING THE DRIVE:" >>${logFile}
+      echo "${error}" >>${logFile}
+      echo "Please report as issue on the raspiblitz github." >>${logFile}
       /home/admin/_cache.sh set state "errorHDD"
       /home/admin/_cache.sh set message "Fail Format (${filesystem})"
       exit 1
@@ -579,36 +578,37 @@ if [ ${isMounted} -eq 0 ]; then
   fi
 
   # CLEAN DRIVE & KEEP BLOCKCHAIN
+  cleanHDD=0
   if [ "${cleanHDD}" == "1" ]; then
-    echo "# special setup tasks: CLEAN DRIVE & KEEP BLOCKCHAIN" >> ${logFile}
+    echo "# special setup tasks: CLEAN DRIVE & KEEP BLOCKCHAIN" >>${logFile}
 
     # when blockchain comes from another node migrate data first
     if [ "${hddGotMigrationData}" != "" ]; then
-        clear
-        echo "Migrating Blockchain of ${hddGotMigrationData}'" >> ${logFile}
-        source <(sudo /home/admin/config.scripts/blitz.migration.sh migration-${hddGotMigrationData})
-        if [ "${error}" != "0" ]; then
-          echo "MIGRATION OF BLOCKHAIN FAILED: ${err}" >> ${logFile}
-          echo "Format data disk on laptop & recover funds with fresh sd card using seed words + static channel backup." >> ${logFile}
-          /home/admin/_cache.sh set state "errorHDD"
-          /home/admin/_cache.sh set message "Fail Migrate Blockchain (${hddGotMigrationData})"
-          exit 1
-        fi
+      clear
+      echo "Migrating Blockchain of ${hddGotMigrationData}'" >>${logFile}
+      source <(sudo /home/admin/config.scripts/blitz.migration.sh migration-${hddGotMigrationData})
+      if [ "${error}" != "0" ]; then
+        echo "MIGRATION OF BLOCKHAIN FAILED: ${err}" >>${logFile}
+        echo "Format data disk on laptop & recover funds with fresh sd card using seed words + static channel backup." >>${logFile}
+        /home/admin/_cache.sh set state "errorHDD"
+        /home/admin/_cache.sh set message "Fail Migrate Blockchain (${hddGotMigrationData})"
+        exit 1
+      fi
     fi
 
     # delete everything but blockchain
-    echo "Deleting everything on HDD/SSD while keeping blockchain ..." >> ${logFile}
+    echo "Deleting everything on HDD/SSD while keeping blockchain ..." >>${logFile}
     sudo /home/admin/config.scripts/blitz.datadrive.sh tempmount 1>/dev/null 2>/dev/null
-    sudo /home/admin/config.scripts/blitz.datadrive.sh clean all -keepblockchain >> ${logFile}
+    sudo /home/admin/config.scripts/blitz.datadrive.sh clean all -keepblockchain >>${logFile}
     if [ "${error}" != "" ]; then
-       echo "CLEANING HDD FAILED:" >> ${logFile}
-      echo "${error}" >> ${logFile}
-      echo "Please report as issue on the raspiblitz github." >> ${logFile}
+      echo "CLEANING HDD FAILED:" >>${logFile}
+      echo "${error}" >>${logFile}
+      echo "Please report as issue on the raspiblitz github." >>${logFile}
       /home/admin/_cache.sh set state "errorHDD"
       /home/admin/_cache.sh set message "Fail Cleaning HDD"
       exit 1
     fi
-    sudo /home/admin/config.scripts/blitz.datadrive.sh unmount >> ${logFile}
+    sudo /home/admin/config.scripts/blitz.datadrive.sh unmount >>${logFile}
     /home/admin/_cache.sh set setupPhase "setup"
 
     sleep 2
@@ -618,12 +618,12 @@ if [ ${isMounted} -eq 0 ]; then
   source <(/home/admin/_cache.sh get state setupPhase)
   if [ "${setupPhase}" == "setup" ]; then
 
-    echo "# CREATING raspiblitz.conf from your setup choices" >> ${logFile}
+    echo "# CREATING raspiblitz.conf from your setup choices" >>${logFile}
     if [ "${network}" == "" ]; then
       network="bitcoin"
     fi
     if [ "${chain}" == "" ]; then
-      chain="main"
+      chain="signet"
     fi
 
     # source the raspiblitz version
@@ -637,22 +637,23 @@ if [ ${isMounted} -eq 0 ]; then
     sudo touch $TEMPCONFIGFILE
     sudo chown admin:admin $TEMPCONFIGFILE
     sudo chmod 777 $TEMPCONFIGFILE
-    echo "# RASPIBLITZ CONFIG FILE" > $TEMPCONFIGFILE
-    echo "raspiBlitzVersion='${codeVersion}'" >> $TEMPCONFIGFILE
-    echo "lcdrotate='1'" >> $TEMPCONFIGFILE
-    echo "lightning='${lightning}'" >> $TEMPCONFIGFILE
-    echo "network='${network}'" >> $TEMPCONFIGFILE
-    echo "chain='${chain}'" >> $TEMPCONFIGFILE
-    echo "hostname='${hostname}'" >> $TEMPCONFIGFILE
-    echo "runBehindTor='on'" >> $TEMPCONFIGFILE
+    echo "# RASPIBLITZ CONFIG FILE" >$TEMPCONFIGFILE
+    echo "raspiBlitzVersion='${codeVersion}'" >>$TEMPCONFIGFILE
+    echo "lcdrotate='1'" >>$TEMPCONFIGFILE
+    echo "lightning='${lightning}'" >>$TEMPCONFIGFILE
+    echo "network='${network}'" >>$TEMPCONFIGFILE
+    echo "chain='${chain}'" >>$TEMPCONFIGFILE
+    echo "hostname='${hostname}'" >>$TEMPCONFIGFILE
+    echo "runBehindTor='on'" >>$TEMPCONFIGFILE
   fi
 
   # make sure HDD is mounted (could be freshly formatted by user on last loop)
   source <(/home/admin/config.scripts/blitz.datadrive.sh status)
-  echo "Temp mounting (2) data drive (hddFormat='${hddFormat}')" >> ${logFile}
-  source <(sudo /home/admin/config.scripts/blitz.datadrive.sh tempmount)
-  echo "Temp mounting (2) result: ${isMounted}" >> ${logFile}
+  echo "Temp mounting (2) data drive (hddFormat='${hddFormat}')" >>${logFile}
+  # source <(sudo /home/admin/config.scripts/blitz.datadrive.sh tempmount)
+  echo "Temp mounting (2) result: ${isMounted}" >>${logFile}
 
+  isMounted=1
   # check that HDD was temp mounted
   if [ "${isMounted}" != "1" ]; then
     /home/admin/_cache.sh set state "errorHDD"
@@ -661,7 +662,7 @@ if [ ${isMounted} -eq 0 ]; then
   fi
 
   # make sure all links between directories/drives are correct
-  echo "Refreshing links between directories/drives .." >> ${logFile}
+  echo "Refreshing links between directories/drives .." >>${logFile}
   sudo /home/admin/config.scripts/blitz.datadrive.sh link
 
   # copy over the raspiblitz.conf created from setup to HDD
@@ -671,27 +672,27 @@ if [ ${isMounted} -eq 0 ]; then
   fi
 
   # enable tor service
-  sudo /home/admin/config.scripts/tor.install.sh enable >> ${logFile}
+  sudo /home/admin/config.scripts/tor.install.sh enable >>${logFile}
 
   # kick-off provision process
   /home/admin/_cache.sh set state "provision"
   /home/admin/_cache.sh set message "Starting Provision"
 
   # add some debug info to logfile
-  echo "# df " >> ${logFile}
-  df >> ${logFile}
-  echo "# lsblk -o NAME,FSTYPE,LABEL " >> ${logFile}
-  lsblk -o NAME,FSTYPE,LABEL >> ${logFile}
+  echo "# df " >>${logFile}
+  df >>${logFile}
+  echo "# lsblk -o NAME,FSTYPE,LABEL " >>${logFile}
+  lsblk -o NAME,FSTYPE,LABEL >>${logFile}
 
   # load fresh setup data
-  echo "# Sourcing ${setupFile} " >> ${logFile}
+  echo "# Sourcing ${setupFile} " >>${logFile}
   source ${setupFile}
 
   # if migrationFile was uploaded (value from raspiblitz.setup) - now import
-  echo "# migrationFile(${migrationFile})" >> ${logFile}
+  echo "# migrationFile(${migrationFile})" >>${logFile}
   if [ "${migrationFile}" != "" ]; then
 
-    echo "##### IMPORT MIGRATIONFILE: ${migrationFile}" >> ${logFile}
+    echo "##### IMPORT MIGRATIONFILE: ${migrationFile}" >>${logFile}
 
     # unpack
     /home/admin/_cache.sh set message "Unpacking Migration Data"
@@ -699,7 +700,7 @@ if [ ${isMounted} -eq 0 ]; then
     source <(/home/admin/config.scripts/blitz.migration.sh import "${migrationFile}")
 
     # check for errors
-    if [ "${error}" != "" ]; then 
+    if [ "${error}" != "" ]; then
       /home/admin/config.scripts/blitz.error.sh _bootstrap.sh "migration-import-error" "blitz.migration.sh import exited with error" "/home/admin/config.scripts/blitz.migration.sh import ${migrationFile} --> ${error}" ${logFile}
       exit 1
     fi
@@ -717,12 +718,12 @@ if [ ${isMounted} -eq 0 ]; then
   fi
 
   # load fresh config data
-  echo "# Sourcing ${configFile} " >> ${logFile}
-  cat ${configFile} >> ${logFile}
+  echo "# Sourcing ${configFile} " >>${logFile}
+  cat ${configFile} >>${logFile}
   source ${configFile}
 
   # load fresh setup data
-  echo "# Sourcing ${setupFile} " >> ${logFile}
+  echo "# Sourcing ${setupFile} " >>${logFile}
   source ${setupFile}
 
   # make sure basic info is in raspiblitz.info
@@ -732,19 +733,19 @@ if [ ${isMounted} -eq 0 ]; then
 
   ###################################
   # Set Password A (in all cases)
-  
+
   if [ "${passwordA}" == "" ]; then
     /home/admin/config.scripts/blitz.error.sh _bootstrap.sh "missing-passworda" "missing passwordA in (${setupFile})" "" ${logFile}
     exit 1
   fi
 
-  echo "# setting PASSWORD A" >> ${logFile}
-  sudo /home/admin/config.scripts/blitz.passwords.sh set a "${passwordA}" >> ${logFile}
+  echo "# setting PASSWORD A" >>${logFile}
+  sudo /home/admin/config.scripts/blitz.passwords.sh set a "${passwordA}" >>${logFile}
 
   # if setup - run provision setup first
   if [ "${setupPhase}" == "setup" ]; then
-    echo "Calling _provision.setup.sh for basic setup tasks .." >> $logFile
-    echo "Follow in a new terminal with: 'tail -f raspiblitz.provision-setup.log'" >> $logFile
+    echo "Calling _provision.setup.sh for basic setup tasks .." >>$logFile
+    echo "Follow in a new terminal with: 'tail -f raspiblitz.provision-setup.log'" >>$logFile
     /home/admin/_cache.sh set message "Provision Setup"
     /home/admin/_provision.setup.sh
     errorState=$?
@@ -761,7 +762,7 @@ if [ ${isMounted} -eq 0 ]; then
 
   # if migration from other nodes - run the migration provision first
   if [ "${setupPhase}" == "migration" ]; then
-    echo "Calling _provision.migration.sh for possible migrations .." >> $logFile
+    echo "Calling _provision.migration.sh for possible migrations .." >>$logFile
     /home/admin/_cache.sh set message "Provision migration"
     /home/admin/_provision.migration.sh
     errorState=$?
@@ -778,8 +779,8 @@ if [ ${isMounted} -eq 0 ]; then
 
   # if update/recovery/migration-followup
   if [ "${setupPhase}" == "update" ] || [ "${setupPhase}" == "recovery" ] || [ "${setupPhase}" == "migration" ]; then
-    echo "Calling _provision.update.sh .." >> $logFile
-    echo "Follow in a new terminal with: 'tail -f raspiblitz.provision-update.log'" >> $logFile
+    echo "Calling _provision.update.sh .." >>$logFile
+    echo "Follow in a new terminal with: 'tail -f raspiblitz.provision-update.log'" >>$logFile
     /home/admin/_cache.sh set message "Provision Update/Recovery/Migration"
     /home/admin/_provision.update.sh
     errorState=$?
@@ -793,9 +794,9 @@ if [ ${isMounted} -eq 0 ]; then
       exit 1
     fi
   fi
-  
+
   # finalize provisioning
-  echo "Calling _bootstrap.provision.sh for general system provisioning (${setupPhase}) .." >> $logFile
+  echo "Calling _bootstrap.provision.sh for general system provisioning (${setupPhase}) .." >>$logFile
   /home/admin/_cache.sh set message "Provision Basics"
   /home/admin/_provision_.sh
   errorState=$?
@@ -822,10 +823,9 @@ if [ ${isMounted} -eq 0 ]; then
   # wait until syncProgress is available (neeed for final dialogs)
   /home/admin/_cache.sh set state "waitsync"
   btc_default_ready="0"
-  while [ "${btc_default_ready}" != "1" ]
-  do
+  while [ "${btc_default_ready}" != "1" ]; do
     source <(/home/admin/_cache.sh get btc_default_ready)
-    echo "# waitsync loop ... btc_default_ready(${btc_default_ready})" >> $logFile
+    echo "# waitsync loop ... btc_default_ready(${btc_default_ready})" >>$logFile
     sleep 2
   done
 
@@ -838,12 +838,12 @@ if [ ${isMounted} -eq 0 ]; then
   # HANDOVER TO FINAL SETUP CONTROLLER
   ###################################################
 
-  echo "# HANDOVER TO FINAL SETUP CONTROLLER ..." >> $logFile
+  echo "# HANDOVER TO FINAL SETUP CONTROLLER ..." >>$logFile
   /home/admin/_cache.sh set state "waitfinal"
   /home/admin/_cache.sh set message "Setup Done"
 
   # system has to wait before reboot to present like seed words and other info/options to user
-  echo "BOOTSTRAP EXIT ... waiting for final setup controller to initiate final reboot." >> $logFile
+  echo "BOOTSTRAP EXIT ... waiting for final setup controller to initiate final reboot." >>$logFile
   exit 1
 
 else
@@ -888,13 +888,13 @@ fi
 /home/admin/_cache.sh set setupPhase "starting"
 
 # load data from config file fresh
-echo "load configfile data" >> $logFile
+echo "load configfile data" >>$logFile
 source ${configFile}
 
 # if a WIFI config exists backup to HDD
 source <(/home/admin/config.scripts/internet.sh status)
 if [ ${configWifiExists} -eq 1 ]; then
-  echo "Making Backup Copy of WIFI config to HDD" >> $logFile
+  echo "Making Backup Copy of WIFI config to HDD" >>$logFile
   cp /etc/wpa_supplicant/wpa_supplicant.conf /mnt/hdd/app-data/wpa_supplicant.conf
 fi
 
@@ -914,10 +914,10 @@ fi
 
 # make sure users have latest credentials (if lnd is on)
 if [ "${lightning}" == "lnd" ] || [ "${lnd}" == "on" ]; then
-  echo "running LND users credentials update" >> $logFile
-  /home/admin/config.scripts/lnd.credentials.sh sync "${chain:-main}net" >> $logFile
+  echo "running LND users credentials update" >>$logFile
+  /home/admin/config.scripts/lnd.credentials.sh sync "${chain:-main}net" >>$logFile
 else
-  echo "skipping LND credentials sync" >> $logFile
+  echo "skipping LND credentials sync" >>$logFile
 fi
 
 ################################
@@ -925,23 +925,23 @@ fi
 # if "localBackupDeviceUUID" is set in
 # raspiblitz.conf mount it on boot
 ################################
-echo "Checking if additional backup device is configured .. (${localBackupDeviceUUID})" >> $logFile
+echo "Checking if additional backup device is configured .. (${localBackupDeviceUUID})" >>$logFile
 if [ "${localBackupDeviceUUID}" != "" ] && [ "${localBackupDeviceUUID}" != "off" ]; then
-  echo "Yes - Mounting BackupDrive: ${localBackupDeviceUUID}" >> $logFile
-  /home/admin/config.scripts/blitz.backupdevice.sh mount >> $logFile
+  echo "Yes - Mounting BackupDrive: ${localBackupDeviceUUID}" >>$logFile
+  /home/admin/config.scripts/blitz.backupdevice.sh mount >>$logFile
 else
-  echo "No additional backup device was configured." >> $logFile
+  echo "No additional backup device was configured." >>$logFile
 fi
 
 #####################################
 # CLEAN HDD TEMP
 #####################################
-echo "CLEANING TEMP DRIVE/FOLDER" >> $logFile
-source <(sudo /home/admin/config.scripts/blitz.datadrive.sh clean temp)
+echo "CLEANING TEMP DRIVE/FOLDER" >>$logFile
+# source <(sudo /home/admin/config.scripts/blitz.datadrive.sh clean temp)
 if [ ${#error} -gt 0 ]; then
-  echo "FAIL: ${error}" >> $logFile
+  echo "FAIL: ${error}" >>$logFile
 else
-  echo "OK: Temp cleaned" >> $logFile
+  echo "OK: Temp cleaned" >>$logFile
 fi
 
 ###############################
@@ -955,14 +955,13 @@ if [ ${isRaid} -eq 1 ]; then
   btrfs scrub start /mnt/hdd/
 fi
 
-
 ####################
 # FORCE UASP FLAG
 ####################
 # if uasp.force flag was set on sd card - now move into raspiblitz.conf
 if [ -f "/boot/uasp.force" ]; then
   /home/admin/config.scripts/blitz.conf.sh set forceUasp "on"
-  echo "DONE forceUasp=on recorded in raspiblitz.conf" >> $logFile
+  echo "DONE forceUasp=on recorded in raspiblitz.conf" >>$logFile
 fi
 
 ######################################
@@ -992,13 +991,13 @@ sudo systemctl enable ${network}d
 # if node is stil in inital blockchain download
 source <(/home/admin/_cache.sh get btc_default_sync_initialblockdownload)
 if [ "${btc_default_sync_initialblockdownload}" == "1" ]; then
-  echo "Node is still in IBD .. refresh btc_default_sync_progress faster" >> $logFile
+  echo "Node is still in IBD .. refresh btc_default_sync_progress faster" >>$logFile
   /home/admin/_cache.sh focus btc_default_sync_progress 0
 fi
 
 # notify about (re)start if activated
 source <(/home/admin/_cache.sh get hostname)
-/home/admin/config.scripts/blitz.notify.sh send "RaspiBlitz '${hostname}' (re)started" >> $logFile
+/home/admin/config.scripts/blitz.notify.sh send "RaspiBlitz '${hostname}' (re)started" >>$logFile
 
-echo "DONE BOOTSTRAP" >> $logFile
+echo "DONE BOOTSTRAP" >>$logFile
 exit 0

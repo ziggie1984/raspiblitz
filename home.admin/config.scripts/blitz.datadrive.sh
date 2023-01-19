@@ -58,7 +58,8 @@ fi
 # is global so that also other parts of this script can use this
 
 # basics
-isMounted=$(df | grep -c /mnt/hdd)
+# isMounted=$(df | grep -c /mnt/hdd)
+isMounted=1
 isBTRFS=$(btrfs filesystem show 2>/dev/null | grep -c 'BLITZSTORAGE')
 isRaid=$(btrfs filesystem df /mnt/hdd 2>/dev/null | grep -c "Data, RAID1")
 isZFS=$(zfs list 2>/dev/null | grep -c "/mnt/hdd")
@@ -126,17 +127,18 @@ if [ "$1" = "status" ]; then
 
       # count partitions
       testpartitioncount=0
+      # TODO Ziggie
       if [ ${#testdevice} -gt 0 ]; then
         testpartitioncount=$(fdisk -l | grep /dev/$testdevice | wc -l)
         # do not count line with disk info
         testpartitioncount=$((testpartitioncount - 1))
       fi
 
-      #echo "# testpartitioncount($testpartitioncount)"
-      #echo "# testpartitioncount(${testpartitioncount})"
-      #echo "# OSPartition(${OSPartition})"
-      #echo "# bootPartition(${bootPartition})"
-      #echo "# hdd(${hdd})"
+      echo "# testpartitioncount($testpartitioncount)"
+      echo "# testpartitioncount(${testpartitioncount})"
+      echo "# OSPartition(${OSPartition})"
+      echo "# bootPartition(${bootPartition})"
+      echo "# hdd(${hdd})"
 
       if [ "$(uname -m)" = "x86_64" ]; then
         if [ $(echo "$testpartition" | grep -c "nvme") = 0 ]; then
@@ -218,6 +220,9 @@ if [ "$1" = "status" ]; then
     echo "hddBytes=${hddBytes}"
     echo "hddGigaBytes=${hddGigaBytes}"
     echo "hddPartitionCandidate='${hddDataPartition}'"
+
+    # Set SD-Card here
+    # Plus do not mount any disk here
 
     # if positive deliver more data
     if [ ${#hddDataPartition} -gt 0 ]; then
@@ -587,6 +592,8 @@ if [ "$1" = "status" ]; then
   echo
   exit 1
 fi
+
+##################################
 
 ######################
 # FORMAT EXT4 or BTRFS
@@ -1453,6 +1460,7 @@ fi
 ########################################
 
 if [ "$1" = "link" ]; then
+  isMounted=1
   if [ ${isMounted} -eq 0 ]; then
     echo "error='no data drive mounted'"
     exit 1
@@ -1466,7 +1474,7 @@ if [ "$1" = "link" ]; then
     rm /home/bitcoin/.bitcoin 2>/dev/null
   fi
 
-  # make sure common base directory exits
+  # make sure common base directory exists
   mkdir -p /mnt/hdd/lnd
   mkdir -p /mnt/hdd/app-data
 
